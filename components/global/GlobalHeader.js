@@ -96,6 +96,16 @@ const GlobalHeader = () => {
             <li className='px-6 py-4 border-b border-gray-300'>
               <NavLink
                 className='opacity-75 hover:opacity-100'
+                href='/salary-transparency-tool'
+                activeClassName='opacity-100'
+              >
+                STP
+              </NavLink>
+            </li>
+
+            <li className='px-6 py-4 border-b border-gray-300'>
+              <NavLink
+                className='opacity-75 hover:opacity-100'
                 href='/learning-resources'
                 activeClassName='opacity-100'
               >
@@ -217,6 +227,17 @@ const GlobalHeader = () => {
                   </NavLink>
                 </li>
               </ul>
+            </li>
+            
+            <li className='pr-4 opacity-75 menu-item lg:pr-10 hover:opacity-100'>
+              <NavLink
+                href='/salary-transparency-tool'
+                className='py-3 duration-75 border-b-2 hover:border-teal-500 '
+                activeClassName='border-teal-500'
+                inactiveClassName='border-transparent'
+              >
+                STP
+              </NavLink>
             </li>
 
             <li className='pr-4 opacity-75 menu-item lg:pr-10 hover:opacity-100'>
