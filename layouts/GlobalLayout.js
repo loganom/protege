@@ -1,9 +1,13 @@
 import PropTypes from 'prop-types'
 import { useUi } from 'store/ui_store'
 import { useRouter } from 'next/router'
+import Head from 'next/head'
 
 import GlobalHeader from 'components/global/GlobalHeader'
 import GlobalFooter from 'components/global/GlobalFooter'
+
+import DashboardLayout from 'layouts/DashboardLayout'
+import GeneralLayout from 'layouts/GeneralLayout'
 
 const GlobalLayout = ({ children }) => {
   const isNavOpen = useUi((s) => s.isNavOpen)
@@ -11,7 +15,7 @@ const GlobalLayout = ({ children }) => {
   const location = useRouter().pathname
 
   return (
-    <div className='flex flex-col flex-1 min-h-screen overflow-x-hidden text-blue-900 contianer'>
+    <div className='flex flex-col flex-1 min-h-screen overflow-x-hidden text-blue-900'>
       <GlobalHeader />
 
       <div
@@ -20,15 +24,13 @@ const GlobalLayout = ({ children }) => {
         }`}
       />
 
-      <main
-        className={`container flex-grow px-6 xl:px-0 ${
-          location !== '/' ? 'mt-12' : ''
-        }`}
-      >
-        {children}
-      </main>
+      {location.includes('/company/') ? (
+        <DashboardLayout hasBanner>{children}</DashboardLayout>
+      ) : (
+        <GeneralLayout>{children}</GeneralLayout>
+      )}
 
-      <GlobalFooter />
+      {location.includes('/company/') ? null : <GlobalFooter />}
     </div>
   )
 }

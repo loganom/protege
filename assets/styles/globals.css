@@ -6,7 +6,7 @@
 
 @import url('./quill-content.css');
 @import url('./buttons.css');
-@import url('./inputs.css');
+@import url('./forms.css');
 @import url('./helpers.css');
 
 *:hover {
@@ -53,4 +53,30 @@ iframe[title*='Simple File Upload'] {
 
 iframe[title*='Simple File Upload'] #widget .dropzone {
   @apply border rounded-none !important;
+}
+
+.z-bottom {
+  z-index: -99999;
+}
+
+/*-- homepage iframe video --*/
+
+.video-wrapper {
+  overflow: hidden;
+  padding-bottom: 56.25%;
+  position: relative;
+  height: 0;
+}
+
+.video-wrapper iframe {
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+}
+
+.blurry-text {
+  color: transparent;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }

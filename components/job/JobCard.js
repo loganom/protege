@@ -1,43 +1,45 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import PropTypes from 'prop-types'
 
 const JobCard = ({ job }) => {
-  // const months = [
-  //   'Jan',
-  //   'Feb',
-  //   'Mar',
-  //   'Apr',
-  //   'May',
-  //   'June',
-  //   'July',
-  //   'Aug',
-  //   'Sept',
-  //   'Oct',
-  //   'Nov',
-  //   'Dec',
-  // ]
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'June',
+    'July',
+    'Aug',
+    'Sept',
+    'Oct',
+    'Nov',
+    'Dec',
+  ]
 
-  // TODO: Fix blocking error
-  // const postDate = job.postedAt.toDate()
+  const postDate = job.postedAt
 
-  // const formattedPostDate = `${
-  //   months[postDate.getMonth()]
-  // } ${postDate.getDate()}`
+  const formattedPostDate = `${
+    months[postDate.getMonth()]
+  } ${postDate.getDate()}`
 
   return (
     <Link data-cy={`job-card-link-${job.id}`} href={`/job-board/${job.id}`}>
-      <a className='flex items-center px-3 py-4 mb-6 transition duration-150 ease-in-out transform bg-white rounded-md shadow md:mb-12 md:px-6 hover:shadow-md overflow-hidden'>
-        <div className='absolute bg-gradient-to-t from-teal-500 to-teal-300 left-0 h-full w-1'></div>
+      <a className='flex items-center px-3 py-4 mb-6 overflow-hidden transition duration-150 ease-in-out transform bg-white rounded-md shadow md:mb-12 md:px-6 hover:shadow-md'>
+        <div className='absolute left-0 w-1 h-full bg-gradient-to-t from-teal-500 to-teal-300' />
         <div
-          className='items-center justify-center hidden overflow-hidden bg-white rounded-full shadow-md md:flex'
+          className='relative items-center justify-center hidden overflow-hidden bg-white rounded-full shadow-md md:flex'
           style={{ width: 75, height: 75 }}
         >
-          <img
+          <Image
             data-cy={`job-card-image-${job.id}`}
-            src={job.companyLogo}
+            src={job.avatar}
             alt={`${job.companyName} Logo`}
             className='w-full my-auto'
+            width={75}
+            height={75}
           />
         </div>
 
@@ -46,7 +48,7 @@ const JobCard = ({ job }) => {
             <div>
               <p
                 data-cy={`job-card-company-name-${job.id}`}
-                className='mb-1 text-sm text-blue-400'
+                className='mb-1 text-sm text-blue-500'
               >
                 {job.companyName}
               </p>
@@ -55,13 +57,13 @@ const JobCard = ({ job }) => {
                 data-cy={`job-card-job-title-${job.id}`}
                 className='text-xl leading-tight text-blue-900 capitalize md:-mt-1 xl:text-2xl'
               >
-                {job.jobTitle}
+                {job.jobtitle}
               </h2>
             </div>
 
             <p
               data-cy={`job-card-role-focus-${job.id}`}
-              className='text-teal-700'
+              className='text-teal-900'
             >
               {job.roleFocus}
             </p>
@@ -70,9 +72,9 @@ const JobCard = ({ job }) => {
           <div className='flex items-center text-right'>
             <p
               data-cy={`job-card-formatted-date-${job.id}`}
-              className='text-lg font-bold text-teal-700'
+              className='text-lg font-bold text-teal-900'
             >
-              {/* {formattedPostDate} */}
+              {formattedPostDate}
             </p>
           </div>
         </div>
@@ -85,8 +87,8 @@ JobCard.propTypes = {
   job: PropTypes.shape({
     id: PropTypes.string.isRequired,
     companyName: PropTypes.string.isRequired,
-    companyLogo: PropTypes.string.isRequired,
-    jobTitle: PropTypes.string.isRequired,
+    avatar: PropTypes.string.isRequired,
+    jobtitle: PropTypes.string.isRequired,
     roleFocus: PropTypes.string.isRequired,
     postedAt: PropTypes.instanceOf(Date).isRequired,
   }).isRequired,

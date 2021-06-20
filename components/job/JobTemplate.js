@@ -3,14 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import PropTypes from 'prop-types'
+import Image from 'next/image'
+import { db } from 'utils/db'
+import firebase from 'firebase/app'
+import toast from 'react-hot-toast'
+import { useAuth } from 'store/AuthContext'
+
+import { v4 as uuidv4 } from 'uuid'
+import { useProfileInfo } from 'store/profile_info'
+import ExternalLink from 'assets/images/icons/external-link'
 
 const JobTemplate = ({ props }) => {
+  const { currentUser } = useAuth()
   const router = useRouter()
+  const profileInfo = useProfileInfo((s) => s.profileInfo)
+  const [applications, setApplications] = useState([])
+  const [hasApplied, setHasApplied] = useState(false)
 
   const isPreview = router.pathname.indexOf('/job-board/') !== 0
 
+  const jobId = router.query.uid
+
   const {
-    howToApply,
     jobDescription,
     companyDescription,
     companyName,
@@ -18,7 +32,8 @@ const JobTemplate = ({ props }) => {
     roleFocus,
     jobtitle,
     positionType,
-    companyLogo,
+    avatar,
+    howToApply,
   } = props
 
   const [isAdmin, setIsAdmin] = useState(false)
@@ -54,8 +69,56 @@ const JobTemplate = ({ props }) => {
     checkAdmin()
   }, [])
 
+  // grab all applications for job
+  useEffect(async () => {
+    const appRef = await db
+      .collection('applications')
+      .where('jobId', '==', jobId)
+      .get()
+
+    const appRefData = appRef.docs.map((docSnapshot) => {
+      const entry = docSnapshot.data()
+
+      return {
+        ...entry,
+      }
+    })
+    setApplications(appRefData)
+  }, [])
+
+  // check if user has already applied for job
+  useEffect(() => {
+    if (currentUser) {
+      const checkForApplication = applications.map((application) => {
+        return profileInfo.userUid === application.candidateId
+      })
+
+      setHasApplied(...checkForApplication)
+    }
+  }, [])
+
   function createMarkup(text) {
     return { __html: text }
+  }
+
+  const createApplication = async () => {
+    const currentDate = firebase.firestore.Timestamp.fromDate(new Date())
+
+    const uid = uuidv4()
+
+    await db
+      .collection('applications')
+      .doc(uid)
+      .set({
+        candidateId: profileInfo.userUid,
+        jobId,
+        applicationDate: currentDate,
+        viewed: false,
+        favorited: false,
+        candidateProfile: { ...profileInfo },
+      })
+
+    toast.success('Application submitted!')
   }
 
   return (
@@ -109,13 +172,14 @@ const JobTemplate = ({ props }) => {
           {!isAdmin ? (
             <div className='mt-8 text-center md:w-1/4 md:text-left'>
               <div className='p-4 bg-gray-200'>
-                {companyLogo ? (
-                  <div className='relative w-2/3 p-4 mx-auto mb-6 overflow-hidden bg-white rounded shadow-md md:w-auto md:mx-0'>
-                    <img
+                {avatar ? (
+                  <div className='relative flex items-center justify-center w-32 h-32 mb-6 overflow-hidden bg-white rounded-full shadow-md mx-auto md:mx-0'>
+                    <Image
                       data-cy='company-logo'
-                      id='companyLogo'
-                      className='w-full rounded-full'
-                      src={companyLogo}
+                      id='avatar'
+                      layout='fill'
+                      objectFit='contain'
+                      src={avatar}
                       alt={`${companyName} logo`}
                     />
                   </div>
@@ -136,34 +200,50 @@ const JobTemplate = ({ props }) => {
                   >
                     Visit website
                   </a>
-                  <a
-                    data-cy='how-to-apply'
-                    href={howToApply}
-                    className={`hidden text-center md:block btn btn-teal mt-8 w-full
-                        ${isPreview ? ' btn-disabled' : ''}`}
-                    tabIndex={isPreview ? -1 : 0}
-                  >
-                    Apply
-                  </a>
+                  <div className='mt-8'>
+                    {howToApply ? (
+                      <a
+                        data-cy='how-to-apply-bottom'
+                        href={howToApply}
+                        className={`btn btn-teal w-full block text-center ${
+                          isPreview ? ' btn-disabled' : ''
+                        } ${
+                          profileInfo?.accountType === 'company'
+                            ? 'btn-disabled'
+                            : ''
+                        }`}
+                        tabIndex={isPreview ? -1 : 0}
+                      >
+                        <span>Apply</span>
+                        <ExternalLink className='w-5 h-5 inline-block -mt-1 ml-2 opacity-75' />
+                      </a>
+                    ) : (
+                      <button
+                        data-cy='how-to-apply'
+                        type='button'
+                        onClick={createApplication}
+                        className={`text-center btn btn-teal mt-8 w-full
+  ${isPreview ? ' btn-disabled' : ''} ${
+                          profileInfo?.accountType === 'company'
+                            ? 'btn-disabled'
+                            : ''
+                        } ${hasApplied ? 'btn-disabled' : ''}`}
+                        tabIndex={isPreview ? -1 : 0}
+                      >
+                        Apply
+                      </button>
+                    )}
+                    {hasApplied && (
+                      <span className='text-xs tracking-wide'>
+                        You&apos;ve already applied for this job
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           ) : null}
         </div>
-
-        {/* <div className='mt-8'>
-          <a
-            data-cy='how-to-apply-bottom'
-            href={howToApply}
-            className={`btn btn-teal w-full md:w-auto ${
-              isPreview ? ' btn-disabled' : ''
-            }
-              `}
-            tabIndex={isPreview ? -1 : 0}
-          >
-            Apply
-          </a>
-        </div> */}
       </div>
     </>
   )
@@ -172,7 +252,6 @@ const JobTemplate = ({ props }) => {
 JobTemplate.propTypes = {
   logo: PropTypes.shape({}),
   props: PropTypes.shape({}).isRequired,
-  howToApply: PropTypes.string,
   companyName: PropTypes.string,
   companyWebsite: PropTypes.string,
   roleFocus: PropTypes.string,
@@ -180,13 +259,13 @@ JobTemplate.propTypes = {
   positionType: PropTypes.string,
   jobDescription: PropTypes.string,
   companyDescription: PropTypes.string,
-  companyLogo: PropTypes.string,
+  avatar: PropTypes.string,
+  howToApply: PropTypes.string,
 }
 
 JobTemplate.defaultProps = {
-  companyLogo: '',
+  avatar: '',
   logo: {},
-  howToApply: '',
   companyName: '',
   companyWebsite: '',
   roleFocus: '',
@@ -194,6 +273,7 @@ JobTemplate.defaultProps = {
   positionType: '',
   jobDescription: '',
   companyDescription: '',
+  howToApply: '',
 }
 
 export default JobTemplate

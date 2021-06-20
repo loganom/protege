@@ -3,36 +3,56 @@ import { useJobs } from 'store/jobs_store'
 import { useRouter } from 'next/router'
 
 import JobCard from '../../components/job/JobCard'
-// import LoadingSpinner from '../components/LoadingSpinner'
 
 const JobBoard = () => {
   const router = useRouter()
-  const filterParam = router.query
+  const [activeJobs, setActiveJobs] = useState([])
 
-  const initialFilterParam = Object.keys(filterParam).length
-    ? filterParam.filter
-    : ''
-
-  const [jobFilter, setJobFilter] = useState(initialFilterParam)
+  const filterParam = router.query.filter
+  const [jobFilter, setJobFilter] = useState(filterParam)
   const jobs = useJobs((s) => s.jobs)
 
   function filteredJobs(jobList, filter) {
     const filtered = jobList.filter((job) => {
-      return job.roleFocus === filter
+      return (
+        job.roleFocus === filter &&
+        job.status !== 'inactive' &&
+        job.paid === true &&
+        job.approved === true
+      )
     })
 
     return filtered
   }
 
+  function getActiveJobs(jobList) {
+    const active = jobList.filter((job) => {
+      return (
+        job.status !== 'inactive' && job.paid === true && job.approved === true
+      )
+    })
+
+    return active
+  }
+
+  function handleOptionChange(event) {
+    if (event.target.value === '') {
+      router.replace('/job-board')
+    } else {
+      router.replace(`/job-board?filter=${event.target.value}`)
+    }
+    setJobFilter(event.target.value)
+  }
+
   useEffect(() => {
-    setJobFilter(jobFilter)
-  }, [])
+    setJobFilter(filterParam)
+  }, [filterParam])
 
   return (
-    <div className='container '>
-      <div className='w-full mx-auto lg:w-3/5'>
-        <div className='flex justify-between items-center mb-6'>
-          <h1 className='mb-6 text-2xl'>
+    <div className='container'>
+      <div className='w-full mx-auto lg:max-w-4xl'>
+        <div className='flex items-center justify-between mb-6'>
+          <h1 className='text-2xl'>
             {jobFilter ? `${jobFilter} Jobs` : 'All Jobs'}
           </h1>
 
@@ -46,8 +66,8 @@ const JobBoard = () => {
                 className='justify-end rounded-md input input-select'
                 id='filter-by'
                 placeholder='Filter By'
-                onChange={(event) => setJobFilter(event.target.value)}
-                value={jobFilter}
+                onChange={handleOptionChange}
+                value={jobFilter || ''}
               >
                 <option value=''>All</option>
                 <option value='Front-end'>Front-end</option>
@@ -63,7 +83,7 @@ const JobBoard = () => {
         <div data-cy='job-board-list' className='mx-auto'>
           {!jobFilter && (
             <>
-              {jobs.map((job, i) => (
+              {getActiveJobs(jobs).map((job, i) => (
                 <JobCard key={job.id} job={job} i={i} />
               ))}
             </>
